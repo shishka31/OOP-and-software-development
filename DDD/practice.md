@@ -201,62 +201,6 @@
 5. 🟥 **Роль фармацевта**: в Pharmacy Operations или в Prescribing? Погашение рецепта — клиническое действие, но выполняется в аптеке. Сейчас — в Pharmacy Operations как `DispensingTask`, ссылающийся на Prescribing.
 6. 🟥 **Страховое покрытие**: рассчитывается в Ordering или Insurance? Сейчас — Insurance владеет `Coverage`, Ordering получает проекцию.
 
----
 
-## Ответы на обязательные вопросы защиты
-
-1. **Как определяли границы Bounded Contexts?** — По трём осям: (а) язык — «пациент/покупатель/застрахованный», «рецепт-документ/рецепт-ссылка»; (б) транзакции — клиническое ядро атомарно внутри себя, commerce — внутри себя; (в) команды и скорости изменений (Conway's Law).
-2. **Какие Hotspots остались?** — См. п. 7: граница Teleconsultation/Prescribing, владение рецептом, синхронность валидации, ФЗ-152, роль фармацевта, расчёт покрытия.
-3. **Что бы изменили с ещё 2 часами?** — Провели бы мини-Event Storming по клиническому пути, чтобы окончательно решить Hotspot №1; проработали бы тактический DDD для `Prescription` (инварианты, события `Issued/Revoked/Dispensed/Expired`); построили бы C4 Level 2 для клинического ядра.
-4. **Что было самым сложным?** — Разделить «рецепт» как юридический документ (клиническое ядро) и как атрибут заказа (commerce), не потеряв инвариант «нельзя продать Rx без валидного рецепта».
-
----
-
-## Приложение: ключевые доменные события (Event Storming, ≥20)
-
-```text
-1.  AccountRegistered
-2.  ConsentGranted
-3.  DoctorVerified
-4.  AppointmentBooked
-5.  AppointmentCancelled
-6.  ConsultationStarted
-7.  ConsultationCompleted
-8.  DiagnosisRecorded
-9.  PrescriptionDrafted
-10. PrescriptionIssued
-11. PrescriptionRevoked
-12. PrescriptionExpired
-13. PrescriptionValidatedByPharmacist
-14. PrescriptionDispensed
-15. DrugAddedToCatalog
-16. StockReserved
-17. StockReleased
-18. OrderPlaced
-19. OrderCancelled
-20. PaymentAuthorized
-21. PaymentCaptured
-22. PaymentRefunded
-23. InsuranceClaimSubmitted
-24. InsuranceClaimApproved
-25. DispensingTaskCreated
-26. OrderAssembled
-27. CourierAssigned
-28. OrderShipped
-29. OrderDelivered
-30. NotificationSent
-```
-
-**Пример потока (клинический путь)**:
-
-```text
-[Пациент] → BookAppointment → AppointmentBooked
-   → [Врач] → StartConsultation → ConsultationStarted
-   → CompleteConsultation → ConsultationCompleted
-   → RecordDiagnosis → DiagnosisRecorded
-   → IssuePrescription → PrescriptionIssued
-   → [Ordering] → PlaceOrder → OrderPlaced
-   → [Фармацевт] → ValidatePrescription → PrescriptionValidatedByPharmacist
-   → AssembleOrder → OrderAssembled
    → [Курьер] → Deliver → OrderDelivered
 ```
